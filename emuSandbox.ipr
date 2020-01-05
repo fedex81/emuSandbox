@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ArtifactManager">
-    <artifact type="jar" name="fmChips">
-      <output-path>$PROJECT_DIR$/out/artifacts/fmChips</output-path>
-      <root id="archive" name="fmChips.jar">
+    <artifact type="jar" name="fmAudio-1XX">
+      <output-path>$PROJECT_DIR$/out/artifacts/fmAudio_1XX</output-path>
+      <root id="archive" name="fmAudio-1XX.jar">
         <element id="module-output" name="emuSandbox" />
         <element id="dir-copy" path="$PROJECT_DIR$/src" />
       </root>
