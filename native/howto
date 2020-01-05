@@ -1,0 +1,8 @@
+#win
+gcc -Wl,--add-stdcall-alias -o ym3438.dll -shared -fPIC ym3438.c
+#linux
+gcc -o ym3438.so -shared -fPIC ym3438.c
+#jnaerator
+java -jar jnaerator-0.12-shaded.jar ym3438.so ym3438.h -mode Directory
+#program arguments
+-Djava.library.path=./native
