@@ -1,0 +1,11 @@
+#linux
+gcc -fPIC -c ssp16.c
+gcc -fPIC -c svp.c
+gcc -o libsvp.so -shared ssp16.o svp.o
+#check
+readelf -s libsvp.so
+
+#jnaerator
+java -jar jnaerator-0.12-shaded.jar libsvp.so svp.h -mode Directory
+#program arguments
+-Djna.library.path=

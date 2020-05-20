@@ -189,8 +189,7 @@
  *   'ld d, (a)' loads from program ROM
  */
 
-#include "shared.h"
-
+#include "svp.h"
 
 #define u32 unsigned int
 
@@ -445,6 +444,8 @@ static int get_inc(int mode)
   if (d & 0x000f) { dst &= ~0x000f; dst |= d & 0x000f; } \
 }
 
+int dramwprint = 0, dramrprint = 0;
+
 static u32 pm_io(int reg, int write, u32 d)
 {
   if (ssp->emu_status & SSP_PMC_SET)
@@ -510,6 +511,10 @@ static u32 pm_io(int reg, int write, u32 d)
                overwite_write(dram[addr], d);
         } else dram[addr] = d;
         ssp->pmac[1][reg] += inc;
+//        if(dramwprint == 0){
+//             printf("PC: %x, dramW: %x, value: %x\n", GET_PC()-1, addr, d);
+//             dramwprint = 1;
+//        }
       }
       else if ((mode & 0xfbff) == 0x4018) /* DRAM, cell inc */
       {
@@ -555,6 +560,9 @@ static u32 pm_io(int reg, int write, u32 d)
         elprintf(EL_SVP, "ssp ROM  r [%06x] %04x", CADDR,
           ((unsigned short *)cart.rom)[addr|((mode&0xf)<<16)]);
 #endif
+        /*if ((signed int)ssp->pmac_read[reg] >> 16 == -1) ssp->pmac_read[reg]++;
+        ssp->pmac_read[reg] += 1<<16;*/
+        if ((signed int)(ssp->pmac[0][reg] & 0xffff) == -1) ssp->pmac[0][reg] += 1<<16;
         ssp->pmac[0][reg] ++;
 
         d = ((unsigned short *)cart.rom)[addr|((mode&0xf)<<16)];
@@ -567,6 +575,10 @@ static u32 pm_io(int reg, int write, u32 d)
 #endif
         d = dram[addr];
         ssp->pmac[0][reg] += inc;
+//        if(dramrprint == 0){
+//              printf("PC: %x, dramR: %x, value: %x\n", GET_PC()-1, addr, d);
+//              dramrprint = 1;
+//        }
       }
       else
       {
@@ -598,6 +610,9 @@ static u32 read_PM0(void)
   d = rPM0;
   if (!(d & 2) && (GET_PPC_OFFS() == 0x800 || GET_PPC_OFFS() == 0x1851E)) {
     ssp->emu_status |= SSP_WAIT_PM0;
+    if(rPM0 > 0 || ssp->gr[SSP_PM0].v > 0){
+        printf("det TIGHT loop: PM0.h %x, PM0.v %x\n", rPM0, ssp->gr[SSP_PM0].v);
+    }
 #ifdef LOG_SVP
     elprintf(EL_SVP, "det TIGHT loop: PM0");
 #endif
@@ -973,16 +988,18 @@ static u32 ptr2_read(int op)
 
 void ssp1601_reset(ssp1601_t *l_ssp)
 {
+  printf("ssp1601_reset, emu_status: %x\n", l_ssp->emu_status);
   ssp = l_ssp;
   ssp->emu_status = 0;
   ssp->gr[SSP_GR0].v = 0xffff0000;
   rPC = 0x400;
   rSTACK = 0; /* ? using ascending stack */
   rST = 0;
+
 }
 
 
-#ifdef USE_DEBUGGER
+
 static void debug_dump(void)
 {
   printf("GR0:   %04x    X: %04x    Y: %04x  A: %08x\n", ssp->gr[SSP_GR0].byte.h, rX, rY, ssp->gr[SSP_A].v);
@@ -994,21 +1011,7 @@ static void debug_dump(void)
   printf("STACK: %i %04x %04x %04x %04x %04x %04x\n", rSTACK, ssp->stack[0], ssp->stack[1],
     ssp->stack[2], ssp->stack[3], ssp->stack[4], ssp->stack[5]);
   printf("r0-r2: %02x %02x %02x  r4-r6: %02x %02x %02x\n", rIJ[0], rIJ[1], rIJ[2], rIJ[4], rIJ[5], rIJ[6]);
-  elprintf(EL_SVP, "cycles: %i, emu_status: %x", g_cycles, ssp->emu_status);
-}
-
-static void debug_dump_mem(void)
-{
-  int h, i;
-  printf("RAM0\n");
-  for (h = 0; h < 32; h++)
-  {
-    if (h == 16) printf("RAM1\n");
-    printf("%03x:", h*16);
-    for (i = 0; i < 16; i++)
-      printf(" %04x", ssp->mem.RAM[h*16+i]);
-    printf("\n");
-  }
+  printf("cycles: %i, emu_status: %x", g_cycles, ssp->emu_status);
 }
 
 static void debug_dump2file(const char *fname, void *mem, int len)
@@ -1026,6 +1029,38 @@ static void debug_dump2file(const char *fname, void *mem, int len)
   else
     printf("dump failed\n");
 }
+
+
+#ifdef USE_DEBUGGER
+static void debug_dump_mem(void)
+{
+  int h, i;
+  printf("RAM0\n");
+  for (h = 0; h < 32; h++)
+  {
+    if (h == 16) printf("RAM1\n");
+    printf("%03x:", h*16);
+    for (i = 0; i < 16; i++)
+      printf(" %04x", ssp->mem.RAM[h*16+i]);
+    printf("\n");
+  }
+}
+
+//static void debug_dump2file(const char *fname, void *mem, int len)
+//{
+//  FILE *f = fopen(fname, "wb");
+//  unsigned short *p = mem;
+//  int i;
+//  if (f) {
+//    for (i = 0; i < len/2; i++) p[i] = (p[i]<<8) | (p[i]>>8);
+//    fwrite(mem, 1, len, f);
+//    fclose(f);
+//    for (i = 0; i < len/2; i++) p[i] = (p[i]<<8) | (p[i]>>8);
+//    printf("dumped to %s\n", fname);
+//  }
+//  else
+//    printf("dump failed\n");
+//}
 
 static int bpts[10] = { 0, };
 
@@ -1083,17 +1118,28 @@ static void debug(unsigned int pc, unsigned int op)
 #endif /* USE_DEBUGGER */
 
 
+int print = 0;
+int pc[0xFFFF];
+
 void ssp1601_run(int cycles)
 {
   SET_PC(rPC);
   g_cycles = cycles;
-
+  unsigned short *dram = (unsigned short *)svp->dram;
   do
   {
     int op;
     u32 tmpv;
 
     op = *PC++;
+    int pcNow = GET_PC() - 1;
+    if(pc[pcNow] == 0){
+        printf("PC: %x, opcode: %x\n", pcNow, op);
+        pc[pcNow] = 1;
+     }
+
+
+//    debug_dump();
 #ifdef USE_DEBUGGER
     debug(GET_PC()-1, op);
 #endif
@@ -1326,4 +1372,8 @@ void ssp1601_run(int cycles)
   if (ssp->gr[SSP_GR0].v != 0xffff0000)
     elprintf(EL_ANOMALY|EL_SVP, "ssp FIXME: REG 0 corruption! %08x", ssp->gr[SSP_GR0].v);
 #endif
+}
+
+void setSvp(svp_t* svpp){
+    svp = svpp;
 }

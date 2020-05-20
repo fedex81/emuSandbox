@@ -1,85 +1,102 @@
 package svp;
 
-import java.util.stream.IntStream;
+import static svp.Ssp16Types.*;
+
+/*
+ * basic, incomplete SSP160x (SSP1601?) interpreter
+ *
+ * Copyright (c) Gražvydas "notaz" Ignotas, 2008
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the organization nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /**
- * Federico Berti
- * <p>
- * Copyright 2020
+ * Java translation by Federico Berti
  */
 public interface Ssp16 {
 
-      int SSP_PMC_HAVE_ADDR = 0x0001; /* address written to PMAC, waiting for mode */
-      int SSP_PMC_SET =       0x0002; /* PMAC is set */
-      int SSP_HANG  =         0x1000; /* 68000 hangs SVP */
-      int SSP_WAIT_PM0 =      0x2000; /* bit1 in PM0 */
-      int SSP_WAIT_30FE06 =   0x4000; /* ssp tight loops on 30FE08 to become non-zero */
-      int SSP_WAIT_30FE08 =   0x8000; /* same for 30FE06 */
-      int SSP_WAIT_MASK =     0xf000;
+    int SSP_PMC_HAVE_ADDR = 0x0001; /* address written to PMAC, waiting for mode */
+    int SSP_PMC_SET = 0x0002; /* PMAC is set */
+    int SSP_HANG = 0x1000; /* 68000 hangs SVP */
+    int SSP_WAIT_PM0 = 0x2000; /* bit1 in PM0 */
+    int SSP_WAIT_30FE06 = 0x4000; /* ssp tight loops on 30FE08 to become non-zero */
+    int SSP_WAIT_30FE08 = 0x8000; /* same for 30FE06 */
+    int SSP_WAIT_MASK = 0xf000;
 
-      //logging
-      int EL_SVP  =    0x00004000; /* SVP stuff  */
-      int EL_ANOMALY = 0x80000000; /* some unexpected conditions (during emulation) */
+    int SSP_RAM_SIZE_WORDS = 256;
+    int SSP_RAM_MASK_WORDS = SSP_RAM_SIZE_WORDS - 1;
+    int SSP_POINTER_REGS_MASK = 0xFF;
+    int MASK_16BIT = 0xFFFF;
+    int PC_MASK = MASK_16BIT;
 
-    /* register names */
-    enum Ssp16Reg {
-        SSP_GR0, SSP_X,     SSP_Y,   SSP_A,
-                SSP_ST,  SSP_STACK, SSP_PC,  SSP_P,
-                SSP_PM0, SSP_PM1,   SSP_PM2, SSP_XST,
-                SSP_PM4, SSP_gr13,  SSP_PMC, SSP_AL
+    int IRAM_ROM_SIZE_WORDS = 0x10000; //128 kbytes -> 64k words
+    int IRAM_SIZE_WORDS = 0x400; //2kbytes -> 1k words
+    int ROM_SIZE_WORDS = IRAM_ROM_SIZE_WORDS - IRAM_SIZE_WORDS; //63k words
+    int DRAM_SIZE_WORDS = 0x10000; //128Kbytes -> 64k words
+
+    int SVP_ROM_START_ADDRESS_BYTE = 0x800;
+    int SVP_ROM_START_ADDRESS_WORD = SVP_ROM_START_ADDRESS_BYTE >> 1;
+
+    Ssp16 NO_SVP = new Ssp16() {
+        @Override
+        public void ssp1601_reset(Ssp1601_t ssp) {
+
+        }
+
+        @Override
+        public void ssp1601_run(int cycles) {
+
+        }
     };
 
-    class ssp_reg_t {
-        int v; //unsigned int
-        //TODO these could be swapped
-        short l; //unsigned short
-        short h; //unsigned short
+    static Ssp16 createSvp(byte[] romData) {
+        Cart svpCart = new Cart();
+        Ssp1601_t sspCtx = new Ssp1601_t();
+        Svp_t svpCtx = new Svp_t(sspCtx);
+        loadSvpMemory(svpCtx, svpCart, SVP_ROM_START_ADDRESS_BYTE, romData);
+
+        Ssp16Impl ssp16 = Ssp16Impl.createInstance(sspCtx, svpCtx, svpCart);
+        ssp16.ssp1601_reset(sspCtx);
+        return ssp16;
     }
 
-    class ssp1601_t {
-        class mem {
-            class bank {
-                short[] RAM0 = new short[256];
-                short[] RAM1 = new short[256];
+    static void loadSvpMemory(Svp_t svpCtx, Cart cart, int startAddrRomByte, byte[] romBytes) {
+        cart.rom = new int[romBytes.length >> 1]; //words
+        int k = 0;
+        for (int i = 0; i < romBytes.length; i += 2) {
+            cart.rom[k] = ((romBytes[i] << 8) | romBytes[i + 1]) & 0xFFFF;
+            if (i >= startAddrRomByte && k < svpCtx.iram_rom.length) {
+                svpCtx.iram_rom[k] = cart.rom[k];
             }
-
-            short[] RAM = new short[256 * 2];  /* 2 internal RAM banks */
-            bank bank = new bank();
-        }
-
-        class ptr {
-            class bank {
-                short[] r0 = new short[4];
-                short[] r1 = new short[4];
-            }
-            bank bank = new bank();
-            int[] r = new int[8];  /* BANK pointers */
-        }
-
-        mem mem = new mem();
-        ptr ptr = new ptr();
-        ssp_reg_t[] gr = new ssp_reg_t[16];  /* general registers */
-        short[] stack = new short[6];
-        int[][] pmac = new int[2][6];  /* read/write modes/addrs for PM0-PM5 */
-        int emu_status;
-        int[] pad = new int[30];
-
-        {
-            IntStream.range(0, gr.length).forEach(i -> gr[i] = new ssp_reg_t());
+            k++;
         }
     }
 
-    class svp_t {
-        int[] iram_rom = new int[0x20000]; /* IRAM (0-0x7ff) and program ROM (0x800-0x1ffff) */
-        int[] dram = new int[0x20000];
-        ssp1601_t ssp1601;
-    }
+    void ssp1601_reset(Ssp1601_t ssp);
 
-
-    class cart {
-        int[] rom;
-    }
-
-    void ssp1601_reset(ssp1601_t ssp);
     void ssp1601_run(int cycles);
+
+    default Svp_t getSvpContext() {
+        return NO_SVP_CONTEXT;
+    }
 }

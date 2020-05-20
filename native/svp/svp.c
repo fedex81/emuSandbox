@@ -9,10 +9,11 @@
 
    Modified for Genesis Plus GX (Eke-Eke): added BIG ENDIAN support, fixed addr/code inversion
 */
-
-#include "shared.h"
+#include "svp.h"
 
 svp_t *svp;
+cart_hw_t cart;
+ssp1601_t *ssp1601;
 
 static void svp_write_dram(uint32 address, uint32 data)
 {
@@ -38,8 +39,8 @@ static uint32 svp_read_cell_2(uint32 address)
 
 static uint32 svp_read_cell_byte(uint32 address)
 {
-  uint16 data = m68k.memory_map[address >> 16].read16(address);
-
+  uint16 data = 0; //m68k.memory_map[address >> 16].read16(address);
+  printf("FIXME: svp_read_cell_byte");
   if (address & 0x01)
   {
     return (data & 0xff);
@@ -52,7 +53,9 @@ void svp_init(void)
 {
   svp = (void *) ((char *)cart.rom + 0x200000);
   memset(svp, 0, sizeof(*svp));
+  ssp1601 = &(*svp).ssp1601;
 
+/*
   m68k.memory_map[0x30].base    = svp->dram;
   m68k.memory_map[0x30].read8   = NULL;
   m68k.memory_map[0x30].read16  = NULL;
@@ -75,6 +78,11 @@ void svp_init(void)
   m68k.memory_map[0x3a].read8   = svp_read_cell_byte;
   m68k.memory_map[0x3a].read16  = svp_read_cell_2;
   zbank_memory_map[0x3a].read   = svp_read_cell_byte;
+  */
+}
+
+void svp_cart(cart_hw_t cartp){
+  cart = cartp;
 }
 
 void svp_reset(void)

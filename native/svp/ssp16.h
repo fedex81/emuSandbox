@@ -10,6 +10,10 @@
    Modified for Genesis Plus GX (Eke-Eke): added BIG ENDIAN support, fixed addr/code inversion
 */
 
+#include "string.h"
+#include "types.h"
+#include "stdio.h"
+
 #ifndef _SSP16_H_
 #define _SSP16_H_
 
@@ -32,13 +36,13 @@ typedef union
 {
   unsigned int v;
   struct {
-#ifdef LSB_FIRST
+//#ifdef LSB_FIRST
   unsigned short l;
   unsigned short h;
-#else
-  unsigned short h;
-  unsigned short l;
-#endif
+//#else
+//  unsigned short h;
+//  unsigned short l;
+//#endif
   } byte;
 } ssp_reg_t;
 
@@ -72,8 +76,18 @@ typedef struct
   unsigned int pad[30];
 } ssp1601_t;
 
+/* Cartridge type */
+typedef struct
+{
+//  uint8 *base;            /* ROM base (saved for OS/Cartridge ROM swap) */
+//  uint32 romsize;         /* ROM size */
+//  uint32 mask;            /* ROM mask */
+//  uint8 special;          /* custom external hardware (Lock-On, J-Cart, 3-D glasses, Terebi Oekaki,...) */
+//  cart_hw_t hw;           /* cartridge internal hardware */
+  uint8 rom[0x300000];  /* ROM area */
+} cart_hw_t;
 
-void ssp1601_reset(ssp1601_t *ssp);
-void ssp1601_run(int cycles);
+extern void ssp1601_reset(ssp1601_t* ssp);
+extern void ssp1601_run(int cycles);
 
 #endif

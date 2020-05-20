@@ -13,8 +13,8 @@
 #ifndef _SVP_H_
 #define _SVP_H_
 
-#include "shared.h"
 #include "ssp16.h"
+
 
 typedef struct {
   unsigned char iram_rom[0x20000]; /* IRAM (0-0x7ff) and program ROM (0x800-0x1ffff) */
@@ -23,6 +23,11 @@ typedef struct {
 } svp_t;
 
 extern svp_t *svp;
+extern cart_hw_t cart;
+extern ssp1601_t *ssp1601;
+
+extern void svp_cart(cart_hw_t cart);
+extern void svp_ssp1601(ssp1601_t instance);
 
 extern void svp_init(void);
 extern void svp_reset(void);
