@@ -19,18 +19,17 @@
 
 package svp.bus;
 
-import omegadrive.cart.mapper.RomMapper;
-import omegadrive.memory.IMemoryProvider;
-import omegadrive.ssp16.Ssp16;
-import omegadrive.ssp16.Ssp16Jna;
-import omegadrive.util.Size;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import svp.Ssp16;
+import svp.Ssp16Jna;
+import svp.Ssp16Types;
+import util.Size;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import static omegadrive.ssp16.Ssp16Types.*;
+import static svp.Ssp16Types.*;
 
 public class SvpMapperCompare extends SvpMapper {
 
@@ -40,9 +39,9 @@ public class SvpMapperCompare extends SvpMapper {
     private final Svp_t svpCtxJava;
     private final Ssp1601_t sspCtxJava;
 
-    public SvpMapperCompare(RomMapper baseMapper, IMemoryProvider memoryProvider) {
-        super(baseMapper, Ssp16Jna.createInstance(memoryProvider));
-        this.ssp16Java = Ssp16.createSvp(memoryProvider);
+    public SvpMapperCompare(RomMapper baseMapper, byte[] romData) {
+        super(baseMapper, Ssp16Jna.createInstance(romData));
+        this.ssp16Java = Ssp16.createSvp(romData);
         svpCtxJava = ssp16Java.getSvpContext();
         sspCtxJava = svpCtxJava.ssp1601;
         SvpMapper.ssp16 = createMux();
