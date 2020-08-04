@@ -157,6 +157,13 @@ public class Util {
         data[startIndex] = (byte) ((value) & 0xFF);
     }
 
+    public static void setUInt32BE(int value, byte[] data, int startIndex) {
+        data[startIndex] = (byte) ((value >> 24) & 0xFF);
+        data[startIndex + 1] = (byte) ((value >> 16) & 0xFF);
+        data[startIndex + 2] = (byte) ((value >> 8) & 0xFF);
+        data[startIndex + 3] = (byte) ((value) & 0xFF);
+    }
+
     public static String toStringValue(int... data) {
         String value = "";
         for (int i = 0; i < data.length; i++) {
@@ -181,6 +188,57 @@ public class Util {
         return data;
     }
 
+    public static long readRom(MemoryProvider memory, Size size, int address) {
+        long data;
+        if (size == Size.BYTE) {
+            data = memory.readRomByte(address);
+        } else if (size == Size.WORD) {
+            data = memory.readRomByte(address) << 8;
+            data |= memory.readRomByte(address + 1);
+        } else {
+            data = memory.readRomByte(address) << 24;
+            data |= memory.readRomByte(address + 1) << 16;
+            data |= memory.readRomByte(address + 2) << 8;
+            data |= memory.readRomByte(address + 3);
+        }
+        LogHelper.printLevel(LOG, Level.DEBUG, "Read ROM: {}, {}: {}", address, data, size, verbose);
+        return data;
+    }
+
+    public static long readRam(MemoryProvider memory, Size size, long addressL) {
+        long data;
+        int address = (int) (addressL & 0xFFFF);
+
+        if (size == Size.BYTE) {
+            data = memory.readRamByte(address);
+        } else if (size == Size.WORD) {
+            data = memory.readRamByte(address) << 8;
+            data |= memory.readRamByte(address + 1);
+        } else {
+            data = memory.readRamByte(address) << 24;
+            data |= memory.readRamByte(address + 1) << 16;
+            data |= memory.readRamByte(address + 2) << 8;
+            data |= memory.readRamByte(address + 3);
+        }
+        LogHelper.printLevel(LOG, Level.DEBUG, "Read RAM: {}, {}: {}", address, data, size, verbose);
+        return data;
+    }
+
+    public static void writeRam(MemoryProvider memory, Size size, int address, long data) {
+        if (size == Size.BYTE) {
+            memory.writeRamByte(address, (int) data);
+        } else if (size == Size.WORD) {
+            memory.writeRamByte(address, (int) (data >> 8));
+            memory.writeRamByte(address + 1, (int) (data & 0xFF));
+        } else if (size == Size.LONG) {
+            memory.writeRamByte(address, (int) ((data >> 24) & 0xFF));
+            memory.writeRamByte(address + 1, (int) ((data >> 16) & 0xFF));
+            memory.writeRamByte(address + 2, (int) ((data >> 8) & 0xFF));
+            memory.writeRamByte(address + 3, (int) (data & 0xFF));
+        }
+        LogHelper.printLevel(LOG, Level.DEBUG, "Write RAM: {}, {}: {}", address, data, size, verbose);
+    }
+
     /**
      * NOTE: input int[] must contain values representable as bytes
      */
@@ -203,6 +261,11 @@ public class Util {
             }
         }
         return data;
+    }
+
+    public static int log2(int n) {
+        if (n <= 0) throw new IllegalArgumentException();
+        return 31 - Integer.numberOfLeadingZeros(n);
     }
 
     public static final String toHex(long val) {
