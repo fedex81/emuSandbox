@@ -19,15 +19,17 @@
 
 package psg;
 
+import omegadrive.Device;
+import omegadrive.sound.SoundProvider;
+import omegadrive.util.RegionDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import psg.white1.SN76496;
 import psg.white2.SN76489Psg;
-import util.Device;
-import util.RegionDetector;
 
-import static util.SoundProvider.getPsgSoundClock;
-import static util.SoundProvider.getPsgSoundClockScaled;
+import static omegadrive.sound.SoundProvider.NTSC_PSG_CLOCK;
+import static omegadrive.sound.SoundProvider.PAL_PSG_CLOCK;
+
 
 public interface PsgProvider extends Device {
 
@@ -39,7 +41,7 @@ public interface PsgProvider extends Device {
     boolean USE_NEW_PSG = true;
 
     static PsgProvider createSnInstance(RegionDetector.Region region, int sampleRate) {
-        int clockHz = (int) getPsgSoundClock(region);
+        int clockHz = (int) SoundProvider.getPsgSoundClock(region);
         LOG.info("PSG instance, clockHz: " + clockHz + ", sampleRate: " + sampleRate);
         PsgProvider psgProvider = SN76489Psg.createInstance(clockHz, sampleRate);
         if (!USE_NEW_PSG) {
@@ -47,6 +49,10 @@ public interface PsgProvider extends Device {
             psgProvider.init();
         }
         return psgProvider;
+    }
+
+    static double getPsgSoundClockScaled(RegionDetector.Region r) {
+        return (RegionDetector.Region.EUROPE != r ? NTSC_PSG_CLOCK : PAL_PSG_CLOCK) / 32d;
     }
 //
 //    static PsgProvider createAyInstance(RegionDetector.Region region, int sampleRate) {

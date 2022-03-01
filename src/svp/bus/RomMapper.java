@@ -20,7 +20,7 @@
 package svp.bus;
 
 
-import util.Size;
+import omegadrive.util.Size;
 
 public interface RomMapper {
 

@@ -46,10 +46,10 @@ public class Ym2612NukeParallel implements MdFmProvider {
     }
 
     @Override
-    public int update(int[] buf_lr, int offset, int end) {
+    public int updateStereo16(int[] buf_lr, int offset, int end) {
 //        nukeJna.update(buf_lr, offset, end);
-        nuke.update(buf_lr, offset, end);
-        nukeJna.update(buf_lr, offset, end);
+        nuke.updateStereo16(buf_lr, offset, end);
+        nukeJna.updateStereo16(buf_lr, offset, end);
         compare.compareState();
         return 0;
     }
@@ -67,7 +67,7 @@ public class Ym2612NukeParallel implements MdFmProvider {
     }
 
     @Override
-    public void tick(double microsPerTick) {
+    public void tick() {
 
     }
 

@@ -19,14 +19,15 @@
 
 package fm.ym2612.nukeykt;
 
-import fm.AudioRateControl;
+
 import fm.MdFmProvider;
 import fm.ym2612.Ym2612RegSupport;
+import omegadrive.sound.SoundProvider;
+import omegadrive.sound.fm.AudioRateControl;
+import omegadrive.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jctools.queues.atomic.SpscAtomicArrayQueue;
-import util.SoundProvider;
-import util.Util;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -132,14 +133,14 @@ public class Ym2612NukeLegacy implements MdFmProvider {
 
     //Output frequency: 53.267 kHz (NTSC), 52.781 kHz (PAL)
     @Override
-    public void tick(double microsPerTick) {
-        cycleAccum += microsPerTick;
+    public void tick() {
+        cycleAccum += 1d; //wrong
         spinOnce();
         addSample();
     }
 
     @Override
-    public int update(int[] buf_lr, int offset, int count) {
+    public int updateStereo16(int[] buf_lr, int offset, int count) {
         offset <<= 1;
         int end = (count << 1) + offset;
         int sampleNumMono;

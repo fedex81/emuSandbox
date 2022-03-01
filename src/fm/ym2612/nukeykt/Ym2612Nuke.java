@@ -20,12 +20,12 @@
 package fm.ym2612.nukeykt;
 
 import fm.MdFmProvider;
-import fm.VariableSampleRateSource;
 import fm.ym2612.Ym2612RegSupport;
+import omegadrive.sound.SoundProvider;
+import omegadrive.sound.fm.VariableSampleRateSource;
+import omegadrive.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import util.SoundProvider;
-import util.Util;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -56,7 +56,7 @@ public class Ym2612Nuke extends VariableSampleRateSource implements MdFmProvider
     }
 
     private Ym2612Nuke(IYm3438.IYm3438_Type chip, int bufferSize) {
-        super(1278409, SoundProvider.SAMPLE_RATE_HZ, bufferSize, "fmNuke");
+        super(1278409, MdFmProvider.audioFormat,  "fmNuke");
         this.ym3438 = new Ym3438();
         this.chip = chip;
         this.ym3438.OPN2_SetChipType(IYm3438.ym3438_mode_readmode);
@@ -95,15 +95,15 @@ public class Ym2612Nuke extends VariableSampleRateSource implements MdFmProvider
 
     private void addSample() {
         if (cycleAccum > fmCalcsPerMicros) {
-            super.addSample(Util.getFromIntegerCache(state.ym3438_sample));
+            super.addMonoSample(Util.getFromIntegerCache(state.ym3438_sample));
             cycleAccum -= fmCalcsPerMicros;
         }
     }
 
     //Output frequency: 53.267 kHz (NTSC), 52.781 kHz (PAL)
     @Override
-    public void tick(double microsPerTick) {
-        cycleAccum += microsPerTick;
+    public void tick() {
+        cycleAccum += 1d; //wrong
         spinOnce();
         addSample();
     }

@@ -21,16 +21,14 @@ package fm;
 
 import fm.ym2612.YM2612;
 import fm.ym2612.nukeykt.Ym2612Nuke;
+import omegadrive.sound.SoundProvider;
+import omegadrive.sound.fm.FmProvider;
+import omegadrive.util.RegionDetector;
+import omegadrive.util.SoundUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import util.RegionDetector;
-import util.SoundProvider;
-import util.SoundUtil;
 
 import javax.sound.sampled.AudioFormat;
-
-import static util.SoundProvider.MD_NUKE_AUDIO;
-import static util.SoundProvider.getFmSoundClock;
 
 public interface MdFmProvider extends FmProvider {
 
@@ -59,13 +57,23 @@ public interface MdFmProvider extends FmProvider {
     int FM_MODE_RESET_A_MASK = 0x10;
     int FM_MODE_RESET_B_MASK = 0x20;
 
+    int OUTPUT_SAMPLE_SIZE = 16;
+    int OUTPUT_CHANNELS = 1;
+
+    boolean MD_NUKE_AUDIO = Boolean.valueOf(System.getProperty("md.nuke.audio", "false"));
+
+    AudioFormat audioFormat = new AudioFormat(SoundProvider.SAMPLE_RATE_HZ, OUTPUT_SAMPLE_SIZE,
+            OUTPUT_CHANNELS, true, false);
+
     static MdFmProvider createInstance(RegionDetector.Region region, int sampleRate) {
-        double clock = getFmSoundClock(region);
-        int bufferSize = SoundUtil.getAudioLineBufferSize(SoundProvider.audioFormat);
+        double clock = SoundProvider.getFmSoundClock(region);
+        int bufferSize = SoundUtil.getAudioLineBufferSize(audioFormat);
         MdFmProvider fmProvider = MD_NUKE_AUDIO ? new Ym2612Nuke(bufferSize) : new YM2612();
         fmProvider.init((int) clock, sampleRate);
         LOG.info("FM instance, clock: " + clock + ", sampleRate: " + sampleRate);
         return fmProvider;
     }
+
+    void init(int clock, int rate);
 
 }

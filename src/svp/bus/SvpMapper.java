@@ -19,11 +19,11 @@
 
 package svp.bus;
 
+import omegadrive.util.Size;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import svp.Ssp16;
 import svp.Ssp16Types;
-import util.Size;
 
 import static svp.Ssp16Types.*;
 import static svp.Ssp16Types.Ssp16Reg.SSP_PM0;

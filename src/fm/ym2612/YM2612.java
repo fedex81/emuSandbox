@@ -554,7 +554,8 @@ public final class YM2612 extends Ym2612RegSupport implements MdFmProvider {
     static double MICROS_PER_PCM = 25; //TODO why?
 
     @Override
-    public void tick(double microsPerTick) {
+    public void tick() {
+        double microsPerTick = 1d; //wrong
         microsAcc += microsPerTick;
         pcmMicrosAcc += microsPerTick;
         //sync every microsecond
@@ -613,7 +614,8 @@ public final class YM2612 extends Ym2612RegSupport implements MdFmProvider {
         busyCyclesMicros = BUSY_MICROS;
     }
 
-    public final int update(int[] buf_lr, int offset, int count) {
+    @Override
+    public int updateStereo16(int[] buf_lr, int offset, int count) {
         offset *= 2;
         int end = count * 2 + offset;
         logEvent("update", offset, end);

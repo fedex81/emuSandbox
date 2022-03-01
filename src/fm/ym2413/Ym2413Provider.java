@@ -19,13 +19,14 @@
 
 package fm.ym2413;
 
-import fm.FmProvider;
-import fm.VariableSampleRateSource;
+import fm.MdFmProvider;
+import omegadrive.sound.SoundProvider;
+import omegadrive.sound.fm.FmProvider;
+import omegadrive.sound.fm.VariableSampleRateSource;
+import omegadrive.util.RegionDetector;
+import omegadrive.util.SoundUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import util.RegionDetector;
-import util.SoundProvider;
-import util.SoundUtil;
 
 public class Ym2413Provider extends VariableSampleRateSource {
 
@@ -40,14 +41,14 @@ public class Ym2413Provider extends VariableSampleRateSource {
     private int sample;
 
     protected Ym2413Provider(int bufferSize) {
-        super(FM_RATE, SoundProvider.SAMPLE_RATE_HZ, bufferSize, "fmDsa");
+        super(FM_RATE, MdFmProvider.audioFormat, "fmDsa");
         ratio = microsPerOutputSample / microsPerInputSample;
     }
 
     public static FmProvider createInstance(RegionDetector.Region region, int sampleRate) {
-        int bufferSize = SoundUtil.getAudioLineBufferSize(SoundProvider.audioFormat);
+        int bufferSize = SoundUtil.getAudioLineBufferSize(MdFmProvider.audioFormat);
         Ym2413Provider p = new Ym2413Provider(bufferSize);
-        p.init(CLOCK_HZ, sampleRate);
+        p.init();
         return p;
     }
 
@@ -63,11 +64,11 @@ public class Ym2413Provider extends VariableSampleRateSource {
 
     //this should be called 49716 times per second
     @Override
-    public void tick(double microsPerTick) {
+    public void tick() {
         rateAccum += adjustedRatio;
         spinOnce();
         if (rateAccum > 1) {
-            addSample(sample);
+            addMonoSample(sample);
             rateAccum -= 1;
         }
     }
@@ -90,7 +91,7 @@ public class Ym2413Provider extends VariableSampleRateSource {
     }
 
     @Override
-    public void init(int clock, int rate) {
+    public void init() {
         Emu2413.OPLL_init();
         opll = Emu2413.OPLL_new();
     }

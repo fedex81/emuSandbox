@@ -19,12 +19,12 @@
 
 package svp.bus;
 
+import omegadrive.util.Size;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import svp.Ssp16;
 import svp.Ssp16Jna;
 import svp.Ssp16Types;
-import util.Size;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;

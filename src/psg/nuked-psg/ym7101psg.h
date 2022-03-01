@@ -28,12 +28,12 @@ typedef uintptr_t       Bitu;
 typedef intptr_t        Bits;
 typedef uint64_t        Bit64u;
 typedef int64_t         Bit64s;
-typedef uint32_t        Bit32u;
-typedef int32_t         Bit32s;
-typedef uint16_t        Bit16u;
-typedef int16_t         Bit16s;
-typedef uint8_t         Bit8u;
-typedef int8_t          Bit8s;
+typedef uint32        Bit32u;
+typedef int32         Bit32s;
+typedef uint16        Bit16u;
+typedef int16         Bit16s;
+typedef uint8         Bit8u;
+typedef int8          Bit8s;
 
 typedef struct {
     Bit8u latch;

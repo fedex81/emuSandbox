@@ -1,6 +1,7 @@
 package svp.bus;
 
-import util.Size;
+
+import omegadrive.util.Size;
 
 /**
  * Federico Berti

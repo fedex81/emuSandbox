@@ -39,10 +39,10 @@
 
 package psg.white1;
 
+import omegadrive.util.SoundUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import psg.PsgProvider;
-import util.SoundUtil;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.FileWriter;
