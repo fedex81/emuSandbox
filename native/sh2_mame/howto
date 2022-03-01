@@ -1,0 +1,3 @@
+#linux
+gcc -c sh2_div_mame.c
+gcc sh2_div_mame.o -o sh2_div_mame

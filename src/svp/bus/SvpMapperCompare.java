@@ -19,6 +19,7 @@
 
 package svp.bus;
 
+import omegadrive.cart.mapper.RomMapper;
 import omegadrive.util.Size;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -17,6 +17,7 @@ package svp;
  * @author Federico Berti
  */
 
+import omegadrive.cpu.ssp16.Ssp16Disasm;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -1169,7 +1170,7 @@ public class Ssp16Impl implements Ssp16 {
             sb.setLength(0);
             sb.append("PC: " + Integer.toHexString(PC) + ", opcode: " + Integer.toHexString(opcode));
 //            System.out.println(sb);
-            Ssp16Disasm.dasm_ssp1601(sb.append(" - "), PC, svpCtx.iram_rom);
+//            Ssp16Disasm.dasm_ssp1601(sb.append(" - "), PC, svpCtx.iram_rom); //TODO
             LOG.info(sb.toString());
             //svp c
             /*

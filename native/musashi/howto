@@ -1,0 +1,12 @@
+#linux
+make
+gcc -o m68kcpu.so -shared m68kcpu.o m68k.o m68kops.o m68kdasm.o
+#jnaerator
+m68kcpu
+#program arguments
+-Djava.library.path=./native
+set LD_LIBRARY_PATH
+
+#debug
+core dumps -> /var/lib/systemd/coredump
+add -g to Makefile when compiling
