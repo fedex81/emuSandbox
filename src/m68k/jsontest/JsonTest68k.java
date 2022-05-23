@@ -35,7 +35,7 @@ import static omegadrive.util.Util.th;
  */
 public class JsonTest68k {
 
-    private static String path = "res/m68k";
+    private static String path = "res/test_m68k_json_202205";
 
     private static final int MEM_SIZE = 0x100_0000;
     private static final int MEM_MASK = MEM_SIZE-1;
@@ -100,7 +100,10 @@ public class JsonTest68k {
         String memRes = checkMemory(data.getFinalMemory());
         boolean isMatch = expected.equals(actual) && memRes == null;
         if(!isMatch){
-            handleSpecialCases(start, expected, actual, data.getFinalMemory());
+            boolean ignore = handleSpecialCases(start, expected, actual, data.getFinalMemory());
+            if(ignore){
+                return null;
+            }
             //retry
             memRes = checkMemory(data.getFinalMemory());
             isMatch = expected.equals(actual) && memRes == null;
@@ -131,7 +134,7 @@ public class JsonTest68k {
 
 
 
-    private void handleSpecialCases(M68kState start, M68kState expected, M68kState actual, List<Integer> memory){
+    private boolean handleSpecialCases(M68kState start, M68kState expected, M68kState actual, List<Integer> memory){
         int opcode = start.opcode;
         String op = MC68000Helper.dumpOp(provider.getM68k(), start.pc);
         //ignores the N-flag for DIV*, different results on overflow
@@ -152,13 +155,12 @@ public class JsonTest68k {
         if(isLinkA7){
             writeMemory(memory);
         }
-        //ignores *BCD, seems to be wrong
+        //ignores *BCD flags, difference on undefined behaviour
         boolean isBCD = op.toLowerCase().contains("bcd");
         if(isBCD){
             actual.sr = expected.sr;
-            actual.ar = expected.ar;
-            actual.dr = expected.dr;
         }
+        return false;
     }
 
     private M68kState toStateObject(InitialState is, List<Integer> memory){
@@ -206,7 +208,7 @@ public class JsonTest68k {
         state.sr = m68k.getSR();
 //        state.opcode = m68k.getOpcode();
         state.ssp = m68k.getSSP();
-        //sync between at and ssp happens on mode switching
+        //sync between a7 and ssp happens on mode switching
         if(m68k.getSSP() != state.ar[7]){
             state.ssp =state.ar[7];
         }
